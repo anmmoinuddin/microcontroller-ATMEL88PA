@@ -1,4 +1,4 @@
-// author: moin & Elvis
+// author: moin
 
 #include <avr/io.h>
 #include "init.h"
