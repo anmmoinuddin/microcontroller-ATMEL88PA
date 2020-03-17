@@ -28,10 +28,8 @@
 /******************************************************************************/
 
 uint8_t adr = 0xA0;
-//volatile uint8_t pos = 0x00;
-//volatile uint8_t pos2 = 0x00;
-
-#define MAX_POS 4
+uint8_t pos = 0xA1;
+uint8_t pos1 = 0xA1;
 
 /**
 	@brief Show the poti and the memory value with the LCD
@@ -103,13 +101,13 @@ void display_showload(void){
 	@brief Load a value from the EEPROM
 	@return loaded value
 */
-uint16_t load_value(uint8_t pos){
+uint16_t load_value(void){
 	uint8_t highbyte, lowbyte;
 
 	
 	// TODO
 	i2c_master_open_write(adr);
-	i2c_master_write(pos*2);
+	i2c_master_write(pos);
 	i2c_master_open_read(adr);
 	highbyte = i2c_master_read_next();
 	lowbyte = i2c_master_read_last();
@@ -126,7 +124,7 @@ uint16_t load_value(uint8_t pos){
 	@brief Save a value to the EEPROM
 	@param tosave value to save
 */
-void save_value(uint16_t tosave, uint8_t pos){
+void save_value(uint16_t tosave){
 	uint8_t highbyte, lowbyte;
 	
 	// TODO
@@ -134,7 +132,7 @@ void save_value(uint16_t tosave, uint8_t pos){
 	lowbyte = tosave % 256;
 
 	i2c_master_open_write(adr);
-	i2c_master_write(pos*2);
+	i2c_master_write(pos1);
 	i2c_master_write(highbyte);
 	i2c_master_write(lowbyte);
 	i2c_master_close();
@@ -155,9 +153,6 @@ int main(void){
 	lcd_init(); // Function to initialise LCD display
 	i2c_master_init(1, 10); // Init TWI
 
-	uint8_t posit=0;
-	char lcdLine1[16], lcdLine2[16];
-	uint8_t saveMenu = 1, loadMenu = 1;
 
 	// Loop forever
 	while (1){
@@ -173,92 +168,12 @@ int main(void){
 		display_showvalues(poti, memory);
 
 		// Check for Key1 (save value)
-		if ( ~PINB & (1 << PB0) ){
-			
-			_delay_ms(50);
-			while (~PINB & (1 << PB0));
-			
-			// menu loop
-			while(saveMenu)
-			{
-				// button 2 to increment save slot position
-				if (~PINB &(1 << PB1))
-				{
-					_delay_ms(50);
-					while (~PINB & (1 << PB1));
-					
-					if (posit >= MAX_POS-1)
-						posit = 0;
-					else
-						posit++;
-				}
-				
-				// button 1 save slot confirmation
-				if (~PINB &(1 << PB0))
-				{
-					_delay_ms(50);
-					while (~PINB & (1 << PB0));
-					saveMenu = 0;
-				}
-				
-				snprintf(lcdLine1, 16, "Save:1 Change:2");
-				snprintf(lcdLine2, 16, "Position: %d", posit);
-				
-				_delay_ms(100);
-				// Write lines to display
-				lcd_clear();
-				lcd_string(lcdLine1);
-				lcd_setcursor(0,2);
-				lcd_string(lcdLine2);
-			}
-			
-			save_value(poti, posit);
-			saveMenu = 1;
-		}
+		if ( ~PINB & (1 << PB0) )
+			save_value(poti);
 
-		// Check for Key2 (load menu)
+		// Check for Key2 (load value)
 		if ( ~PINB & (1 << PB1) )
-		{
-			_delay_ms(50);
-			while (~PINB & (1 << PB1));
-			
-			// menu loop
-			while(loadMenu)
-			{
-				// button 1 to increment load slot position
-				if (~PINB &(1 << PB0))
-				{
-					_delay_ms(50);
-					while (~PINB & (1 << PB0));
-					
-					if (posit >= MAX_POS-1)
-						posit = 0;
-					else
-						posit++;
-				}
-				
-				// button 2 load slot confirmation
-				if (~PINB &(1 << PB1))
-				{
-					_delay_ms(50);
-					while (~PINB & (1 << PB1));
-					loadMenu = 0;
-				}
-				
-				snprintf(lcdLine1, 16, "Change:1 Load:2");
-				snprintf(lcdLine2, 16, "Load Pos: %d", posit);
-				
-				_delay_ms(100);
-				// Write lines to display
-				lcd_clear();
-				lcd_string(lcdLine1);
-				lcd_setcursor(0,2);
-				lcd_string(lcdLine2);
-			}
-			
-			memory = load_value(posit);
-			loadMenu = 1;
-		}	
+			memory = load_value();	
 	}
 
 	return 0;
