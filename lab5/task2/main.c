@@ -1,6 +1,6 @@
  
 /**
-	@author Thomas Grunenberg
+	@author Moin
 	@version 0.1
 	@file one.c
 	@brief Seven segment display
