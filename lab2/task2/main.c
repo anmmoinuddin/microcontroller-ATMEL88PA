@@ -1,5 +1,5 @@
  /**
-	@author Moin and ELvis
+	@author Moin 
 	 
 	@file main.c
 	@brief ENTER discription
